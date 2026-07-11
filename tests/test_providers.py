@@ -6,7 +6,12 @@ from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 from urllib.parse import parse_qs
 
-from finalert.providers import EmailProvider, TelegramProvider, WebhookProvider
+from finalert.providers import (
+    EmailProvider,
+    PushPlusProvider,
+    TelegramProvider,
+    WebhookProvider,
+)
 from finalert.exceptions import DeliveryError
 
 
@@ -70,6 +75,63 @@ class ProviderTests(unittest.TestCase):
 
         self.assertEqual(str(raised.exception), "Telegram returned HTTP 401")
         self.assertNotIn("SECRET", str(raised.exception))
+
+    @patch("finalert.providers.pushplus.urlopen")
+    def test_pushplus_posts_personal_wechat_message(
+        self, urlopen: MagicMock
+    ) -> None:
+        urlopen.return_value = Response(b'{"code": 200, "msg": "success"}')
+        provider = PushPlusProvider("SECRET")
+
+        provider.send("Done", "The job completed")
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.method, "POST")
+        self.assertEqual(request.full_url, "https://www.pushplus.plus/send")
+        self.assertEqual(
+            json.loads(request.data),
+            {
+                "token": "SECRET",
+                "title": "Done",
+                "content": "The job completed",
+                "template": "txt",
+                "channel": "wechat",
+            },
+        )
+
+    @patch("finalert.providers.pushplus.urlopen")
+    def test_pushplus_api_error_does_not_expose_token(
+        self, urlopen: MagicMock
+    ) -> None:
+        urlopen.return_value = Response(b'{"code": 500, "msg": "invalid token"}')
+        provider = PushPlusProvider("SECRET")
+
+        with self.assertRaises(DeliveryError) as raised:
+            provider.send("Done", "The job completed")
+
+        self.assertEqual(str(raised.exception), "PushPlus returned error code 500")
+        self.assertNotIn("SECRET", str(raised.exception))
+
+    @patch("finalert.providers.pushplus.urlopen")
+    def test_pushplus_explains_required_identity_verification(
+        self, urlopen: MagicMock
+    ) -> None:
+        urlopen.return_value = Response(b'{"code": 905, "msg": "not verified"}')
+        provider = PushPlusProvider("SECRET")
+
+        with self.assertRaises(DeliveryError) as raised:
+            provider.send("Done", "The job completed")
+
+        self.assertIn("identity verification", str(raised.exception))
+        self.assertNotIn("SECRET", str(raised.exception))
+
+    @patch("finalert.providers.pushplus.urlopen")
+    def test_pushplus_rejects_invalid_response(self, urlopen: MagicMock) -> None:
+        urlopen.return_value = Response(b"not json")
+        provider = PushPlusProvider("SECRET")
+
+        with self.assertRaisesRegex(DeliveryError, "invalid response"):
+            provider.send("Done", "The job completed")
 
     @patch("finalert.providers.email.smtplib.SMTP")
     def test_email_uses_starttls_and_login(self, smtp_class: MagicMock) -> None:

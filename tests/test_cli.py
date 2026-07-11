@@ -16,18 +16,18 @@ class CliTests(unittest.TestCase):
             main(["--version"])
 
         self.assertEqual(raised.exception.code, 0)
-        self.assertEqual(output.getvalue().strip(), "finalert 0.2.0")
+        self.assertEqual(output.getvalue().strip(), "finalert 0.3.0")
 
     @patch("finalert.cli.provider_from_env")
     def test_test_command_succeeds(self, provider_from_env: MagicMock) -> None:
         output = StringIO()
 
         with redirect_stdout(output):
-            result = main(["test", "--provider", "webhook"])
+            result = main(["test", "--provider", "pushplus"])
 
         self.assertEqual(result, 0)
         self.assertIn("Test notification sent", output.getvalue())
-        provider_from_env.assert_called_once_with("webhook")
+        provider_from_env.assert_called_once_with("pushplus")
 
     @patch("finalert.cli.provider_from_env", side_effect=RuntimeError("offline"))
     def test_test_command_reports_failure(self, provider_from_env: MagicMock) -> None:

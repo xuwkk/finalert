@@ -4,7 +4,12 @@ import unittest
 
 from finalert.config import provider_from_env
 from finalert.exceptions import ConfigurationError
-from finalert.providers import EmailProvider, TelegramProvider, WebhookProvider
+from finalert.providers import (
+    EmailProvider,
+    PushPlusProvider,
+    TelegramProvider,
+    WebhookProvider,
+)
 
 
 class ConfigTests(unittest.TestCase):
@@ -31,6 +36,17 @@ class ConfigTests(unittest.TestCase):
 
         self.assertIsInstance(provider, WebhookProvider)
         self.assertEqual(provider.headers["Authorization"], "Bearer secret")
+
+    def test_pushplus_configuration(self) -> None:
+        provider = provider_from_env(
+            env={
+                "FINALERT_PROVIDER": "pushplus",
+                "FINALERT_PUSHPLUS_TOKEN": "token",
+            }
+        )
+
+        self.assertIsInstance(provider, PushPlusProvider)
+        self.assertEqual(provider.token, "token")
 
     def test_email_configuration(self) -> None:
         provider = provider_from_env(
@@ -77,4 +93,3 @@ class ConfigTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
