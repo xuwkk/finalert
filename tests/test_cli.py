@@ -9,6 +9,15 @@ from finalert.cli import main
 
 
 class CliTests(unittest.TestCase):
+    def test_version_command_reports_package_version(self) -> None:
+        output = StringIO()
+
+        with redirect_stdout(output), self.assertRaises(SystemExit) as raised:
+            main(["--version"])
+
+        self.assertEqual(raised.exception.code, 0)
+        self.assertEqual(output.getvalue().strip(), "finalert 0.2.0")
+
     @patch("finalert.cli.provider_from_env")
     def test_test_command_succeeds(self, provider_from_env: MagicMock) -> None:
         output = StringIO()
@@ -33,4 +42,3 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

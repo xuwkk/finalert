@@ -4,21 +4,21 @@ Repository = "https://github.com/xuwkk/finalert"
 Issues = "https://github.com/xuwkk/finalert/issues"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "finalert"
-version = "0.1.0"
+version = "0.2.0"
 description = "Finally, an alert when your code is done"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Finalert contributors" }]
 keywords = ["notification", "telegram", "email", "webhook", "jobs"]
 classifiers = [
   "Development Status :: 3 - Alpha",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -26,6 +26,9 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
+
+[project.optional-dependencies]
+tqdm = ["tqdm>=4.66,<5"]
 
 [project.scripts]
 finalert = "finalert.cli:main"

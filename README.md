@@ -2,11 +2,12 @@
 
 > **Finally, an alert when your code is done.**
 
-Finalert sends a notification when a Python job completes or fails. It supports
-Telegram, SMTP email, and generic JSON webhooks through a small synchronous API
-with no third-party runtime dependencies.
+Finalert sends progress, completion, and failure notifications for Python jobs.
+Its tqdm integration can notify you at selected percentages, while Telegram,
+SMTP email, and generic JSON webhooks provide flexible delivery. The core
+package has no third-party runtime dependencies; tqdm support is optional.
 
-Use `notify()` at the end of an existing script for the simplest integration:
+1. Use `notify()` at the end of an existing script for the simplest integration:
 
 ```python
 from finalert import notify
@@ -17,7 +18,7 @@ save_results()
 notify("The analysis results have been saved.")
 ```
 
-Use `watch()` when you also want failure notifications and elapsed time:
+2. Use `watch()` when you also want failure notifications and elapsed time:
 
 ```python
 from finalert import watch
@@ -27,15 +28,37 @@ with watch("Model training"):
     save_model()
 ```
 
+3. Install the tqdm integration and add milestone notifications to an existing
+progress loop:
+
+```bash
+python -m pip install "finalert[tqdm]"
+```
+
+```python
+from finalert import watch
+from finalert.tqdm import tqdm
+
+with watch("Model training"):
+    for batch in tqdm(
+        batches,
+        desc="Model training",
+        notify_at=(25, 50, 75),
+    ):
+        train_batch(batch)
+```
+
+This sends progress messages at 25%, 50%, and 75%, followed by one final success
+or failure notification.
+
 ## Features
 
 - Send a notification from the final line of a Python program.
 - Report successful completion, failure, elapsed time, and an exception summary.
 - Deliver notifications through Telegram, SMTP email, or a JSON webhook.
-- Test provider configuration from the command line.
 - Preserve the original program result if notification delivery fails.
-- Configure credentials through environment variables instead of source code.
-- Run on Python 3.10 or later without third-party runtime dependencies.
+- Configure credentials through environment variables.
+- Send low-frequency tqdm progress notifications at selected percentages.
 
 ## Installation
 
@@ -43,6 +66,12 @@ Install from PyPI:
 
 ```bash
 python -m pip install finalert
+```
+
+Install the optional tqdm integration with:
+
+```bash
+python -m pip install "finalert[tqdm]"
 ```
 
 Confirm the installation:
@@ -56,7 +85,7 @@ finalert --version
 Finalert reads configuration from environment variables. Select one provider by
 setting `FINALERT_PROVIDER` to `telegram`, `email`, or `webhook`.
 
-Finalert does not automatically load `.env` files in version 0.1. If you keep the
+Finalert does not automatically load `.env` files. If you keep the
 variables in a shell file such as `.finalert.env`, load it before running a job:
 
 ```bash
@@ -69,15 +98,17 @@ Do not commit tokens or passwords to version control. Add `.finalert.env` to
 ### Telegram
 
 Create a bot with Telegram's `@BotFather`, send the bot at least one message,
-and obtain the bot token and destination chat ID.
-
-For a complete walkthrough, see [telegram.md](telegram.md).
-
+and obtain the bot token and destination chat ID to compete the following in the `.finalert.env` file:
 ```bash
 export FINALERT_PROVIDER="telegram"
 export FINALERT_TELEGRAM_TOKEN="your-bot-token"
 export FINALERT_TELEGRAM_CHAT_ID="your-chat-id"
 ```
+
+For a complete walkthrough, see the
+[Telegram setup guide](https://github.com/xuwkk/finalert/blob/master/telegram.md).
+
+
 
 ### SMTP email
 
@@ -200,7 +231,7 @@ if not notify("The export has completed"):
 
 Delivery errors are logged as warnings. They do not turn a successful job into a
 failed job. A final-line `notify()` call only runs if program execution reaches
-that line, so it cannot report an earlier crash.
+that line, so it cannot report an earlier crash; use `watch()` instead.
 
 ### Monitor success and failure
 
@@ -229,24 +260,66 @@ with watch("Model training", provider="telegram"):
     train_model()
 ```
 
-The selected provider's credentials still come from environment variables.
+The selected provider's credentials still come from environment variables. *You can add multiple providers to the `.finalert.env` file.*
+
+### Report tqdm progress milestones
+
+Install the optional integration and import Finalert's tqdm wrapper:
+
+```bash
+python -m pip install "finalert[tqdm]"
+```
+
+```python
+from finalert.tqdm import tqdm
+
+for item in tqdm(
+    dataset,
+    desc="Dataset processing",
+    notify_at=(25, 50, 75, 100),
+):
+    process(item)
+```
+
+Each percentage is notified at most once. If one update crosses several
+milestones, Finalert sends only the latest milestone by default to avoid a burst
+of messages. Use `catch_up="all"` to send every crossed milestone.
+
+Combine progress milestones with `watch()` for a final success or failure
+notification:
+
+```python
+from finalert import watch
+from finalert.tqdm import tqdm
+
+with watch("Dataset processing"):
+    for item in tqdm(
+        dataset,
+        desc="Dataset processing",
+        notify_at=(25, 50, 75),
+    ):
+        process(item)
+```
+
+Percentage notifications require an iterable with a known length or an explicit
+`total=...`. It also supports manual progress updates and `trange` shortcut. 
+For complete options and behaviour, see the
+[tqdm integration guide](https://github.com/xuwkk/finalert/blob/master/tqdm.md).
 
 ## Limitations
 
-- Finalert cannot notify after `kill -9`, loss of power, a fatal interpreter
-  failure, or another event that prevents Python from executing notification
-  code.
-- Version 0.1 sends notifications synchronously and does not retry failures.
-- Version 0.1 does not automatically read `.env` or other configuration files.
-- Email providers may require an application-specific password.
-- Telegram bots cannot initiate a conversation; the recipient must contact the
-  bot first.
+- Finalert cannot notify event that prevents Python from executing notification
+code.
+- Finalert sends notifications synchronously and does not retry failures.
+- Finalert does not automatically read `.env` or other configuration files.
+- tqdm percentage notifications require a known positive total.
 
 ## Development
 
-Run the test suite after installing the package in editable mode:
+Run the test suite after installing the package with its tqdm extra:
 
 ```bash
+python -m pip install -e ".[tqdm]"
 python -m unittest discover -s tests -v
 ```
 
@@ -259,7 +332,9 @@ check.
 ```text
 src/finalert/           Package source
 src/finalert/providers/ Notification providers
+src/finalert/tqdm.py    Optional tqdm integration
 tests/                 Unit tests
+tqdm.md                tqdm integration guide
 dist/                  Built wheel
 ```
 

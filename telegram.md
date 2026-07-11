@@ -106,7 +106,7 @@ Add it to your project's `.gitignore`:
 .finalert.env
 ```
 
-Finalert 0.1 does not automatically load environment files. Load the file in
+Finalert does not automatically load environment files. Load the file in
 each new terminal session before running a job:
 
 ```bash
@@ -130,7 +130,7 @@ finalert --version
 The expected output is:
 
 ```text
-finalert 0.1.0
+finalert 0.2.0
 ```
 
 ## 6. Send a test notification
@@ -269,4 +269,3 @@ python -m finalert test
 
 Revoke it immediately through BotFather, generate a new token, update your
 environment file, and restart any process that used the old value.
-
