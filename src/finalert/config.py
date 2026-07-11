@@ -5,7 +5,13 @@ import os
 from collections.abc import Mapping
 
 from finalert.exceptions import ConfigurationError
-from finalert.providers import EmailProvider, Provider, TelegramProvider, WebhookProvider
+from finalert.providers import (
+    EmailProvider,
+    Provider,
+    PushPlusProvider,
+    TelegramProvider,
+    WebhookProvider,
+)
 
 
 def _required(env: Mapping[str, str], name: str) -> str:
@@ -47,7 +53,8 @@ def provider_from_env(
     name = (provider_name or values.get("FINALERT_PROVIDER", "")).strip().lower()
     if not name:
         raise ConfigurationError(
-            "No provider selected. Set FINALERT_PROVIDER to telegram, email, or webhook."
+            "No provider selected. Set FINALERT_PROVIDER to telegram, email, "
+            "webhook, or pushplus."
         )
 
     timeout = _timeout(values)
@@ -56,6 +63,12 @@ def provider_from_env(
         return TelegramProvider(
             _required(values, "FINALERT_TELEGRAM_TOKEN"),
             _required(values, "FINALERT_TELEGRAM_CHAT_ID"),
+            timeout=timeout,
+        )
+
+    if name == "pushplus":
+        return PushPlusProvider(
+            _required(values, "FINALERT_PUSHPLUS_TOKEN"),
             timeout=timeout,
         )
 
@@ -111,5 +124,6 @@ def provider_from_env(
         )
 
     raise ConfigurationError(
-        f"Unsupported provider {name!r}. Choose telegram, email, or webhook."
+        f"Unsupported provider {name!r}. Choose telegram, email, webhook, or "
+        "pushplus."
     )

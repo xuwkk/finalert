@@ -4,8 +4,9 @@
 
 Finalert sends progress, completion, and failure notifications for Python jobs.
 Its tqdm integration can notify you at selected percentages, while Telegram,
-SMTP email, and generic JSON webhooks provide flexible delivery. The core
-package has no third-party runtime dependencies; tqdm support is optional.
+PushPlus personal WeChat, SMTP email, and generic JSON webhooks provide flexible
+delivery. The core package has no third-party runtime dependencies; tqdm support
+is optional.
 
 1. Use `notify()` at the end of an existing script for the simplest integration:
 
@@ -18,7 +19,7 @@ save_results()
 notify("The analysis results have been saved.")
 ```
 
-2. Use `watch()` when you also want failure notifications and elapsed time:
+1. Use `watch()` when you also want failure notifications and elapsed time:
 
 ```python
 from finalert import watch
@@ -28,7 +29,8 @@ with watch("Model training"):
     save_model()
 ```
 
-3. Install the tqdm integration and add milestone notifications to an existing
+1. Install the tqdm integration and add milestone notifications to an existing
+
 progress loop:
 
 ```bash
@@ -55,7 +57,8 @@ or failure notification.
 
 - Send a notification from the final line of a Python program.
 - Report successful completion, failure, elapsed time, and an exception summary.
-- Deliver notifications through Telegram, SMTP email, or a JSON webhook.
+- Deliver notifications through Telegram, PushPlus personal WeChat, SMTP email,
+or a JSON webhook.
 - Preserve the original program result if notification delivery fails.
 - Configure credentials through environment variables.
 - Send low-frequency tqdm progress notifications at selected percentages.
@@ -83,7 +86,7 @@ finalert --version
 ## Configuration
 
 Finalert reads configuration from environment variables. Select one provider by
-setting `FINALERT_PROVIDER` to `telegram`, `email`, or `webhook`.
+setting `FINALERT_PROVIDER` to `telegram`, `pushplus`, `email`, or `webhook`.
 
 Finalert does not automatically load `.env` files. If you keep the
 variables in a shell file such as `.finalert.env`, load it before running a job:
@@ -99,6 +102,7 @@ Do not commit tokens or passwords to version control. Add `.finalert.env` to
 
 Create a bot with Telegram's `@BotFather`, send the bot at least one message,
 and obtain the bot token and destination chat ID to compete the following in the `.finalert.env` file:
+
 ```bash
 export FINALERT_PROVIDER="telegram"
 export FINALERT_TELEGRAM_TOKEN="your-bot-token"
@@ -108,7 +112,36 @@ export FINALERT_TELEGRAM_CHAT_ID="your-chat-id"
 For a complete walkthrough, see the
 [Telegram setup guide](https://github.com/xuwkk/finalert/blob/master/telegram.md).
 
+### Personal WeChat through PushPlus
 
+PushPlus is an independent third-party notification service that can deliver
+Finalert messages through its WeChat channel. Create a PushPlus account, complete
+the identity verification required by PushPlus for its send API, connect the
+WeChat recipient, and obtain a personal message token.
+
+> **PushPlus fee notice:** PushPlus registration is separate from the identity
+> verification required to send messages. According to the current PushPlus
+> documentation, identity verification has a service fee. These are third-party requirements and may
+> change, so review the
+> [current PushPlus verification terms](https://www.pushplus.plus/doc/function/verify.html)
+> before choosing this provider.
+
+```bash
+export FINALERT_PROVIDER="pushplus"
+export FINALERT_PUSHPLUS_TOKEN="your-message-token"
+```
+
+Then verify delivery:
+
+```bash
+finalert test --provider pushplus
+```
+
+Finalert sends the token in the HTTPS request body and validates the PushPlus
+response code. Treat the token as a password and never commit it to Git.
+
+For a complete walkthrough, see the
+[PushPlus setup guide](https://github.com/xuwkk/finalert/blob/master/pushplus.md).
 
 ### SMTP email
 
@@ -251,7 +284,10 @@ original exception so the program keeps its normal failure behaviour.
 
 ### Override the provider in Python
 
-The provider can be selected for an individual call:
+You may store credentials for multiple providers in `.finalert.env`. When no
+provider is specified in Python, `FINALERT_PROVIDER` selects the default
+provider. A call-level `provider=` argument overrides that default for the
+individual call:
 
 ```python
 notify("Backup complete", provider="email")
@@ -260,7 +296,9 @@ with watch("Model training", provider="telegram"):
     train_model()
 ```
 
-The selected provider's credentials still come from environment variables. *You can add multiple providers to the `.finalert.env` file.*
+The selected provider's credentials still come from environment variables. The
+order of provider credentials in `.finalert.env` has no effect, and each
+notification is sent through one provider only.
 
 ### Report tqdm progress milestones
 
@@ -313,6 +351,8 @@ code.
 - Finalert sends notifications synchronously and does not retry failures.
 - Finalert does not automatically read `.env` or other configuration files.
 - tqdm percentage notifications require a known positive total.
+- PushPlus is a third-party service, so availability and delivery limits are
+controlled by PushPlus and WeChat.
 
 ## Development
 
@@ -323,7 +363,7 @@ python -m pip install -e ".[tqdm]"
 python -m unittest discover -s tests -v
 ```
 
-The tests mock external services and do not send real Telegram messages, emails,
+The tests mock external services and do not send real Telegram, PushPlus, email,
 or webhook requests. Use `finalert test` with real credentials for an integration
 check.
 
@@ -335,6 +375,7 @@ src/finalert/providers/ Notification providers
 src/finalert/tqdm.py    Optional tqdm integration
 tests/                 Unit tests
 tqdm.md                tqdm integration guide
+pushplus.md            PushPlus personal WeChat guide
 dist/                  Built wheel
 ```
 

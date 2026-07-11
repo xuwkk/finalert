@@ -10,11 +10,13 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="finalert", description="Send notifications for Python jobs."
     )
-    parser.add_argument("--version", action="version", version="finalert 0.2.0")
+    parser.add_argument("--version", action="version", version="finalert 0.3.1")
     commands = parser.add_subparsers(dest="command", required=True)
     test = commands.add_parser("test", help="send a test notification")
     test.add_argument(
-        "--provider", choices=("telegram", "email", "webhook"), default=None
+        "--provider",
+        choices=("telegram", "email", "webhook", "pushplus"),
+        default=None,
     )
     return parser
 

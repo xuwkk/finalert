@@ -1,7 +1,8 @@
 # Using Finalert with tqdm
 
 Finalert can wrap tqdm and send progress notifications through the same
-Telegram, email, or webhook provider used by `notify()` and `watch()`.
+Telegram, PushPlus personal WeChat, email, or webhook provider used by
+`notify()` and `watch()`.
 
 Unlike `tqdm.contrib.telegram`, which mirrors a progress bar to Telegram,
 Finalert sends low-frequency milestone messages and remains provider-agnostic.
@@ -54,7 +55,13 @@ export FINALERT_TELEGRAM_CHAT_ID="your-chat-id"
 ```
 
 It works in the same way with `FINALERT_PROVIDER=email` or
-`FINALERT_PROVIDER=webhook`.
+`FINALERT_PROVIDER=webhook`. For personal WeChat notifications through
+PushPlus, use:
+
+```bash
+export FINALERT_PROVIDER="pushplus"
+export FINALERT_PUSHPLUS_TOKEN="your-message-token"
+```
 
 ## Choosing milestones
 

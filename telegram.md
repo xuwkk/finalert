@@ -130,7 +130,7 @@ finalert --version
 The expected output is:
 
 ```text
-finalert 0.2.0
+finalert 0.3.1
 ```
 
 ## 6. Send a test notification

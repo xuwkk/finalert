@@ -9,14 +9,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "finalert"
-version = "0.2.0"
+version = "0.3.1"
 description = "Finally, an alert when your code is done"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Finalert contributors" }]
-keywords = ["notification", "telegram", "email", "webhook", "jobs"]
+keywords = [
+  "notification",
+  "telegram",
+  "email",
+  "webhook",
+  "pushplus",
+  "wechat",
+  "jobs",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
