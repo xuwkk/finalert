@@ -39,22 +39,10 @@ with watch("Model training"):
 
 ## Installation
 
-Install from the project directory:
+Install from PyPI:
 
 ```bash
-python -m pip install .
-```
-
-For development, use an editable installation:
-
-```bash
-python -m pip install -e .
-```
-
-You can also install the prebuilt wheel:
-
-```bash
-python -m pip install dist/finalert-0.1.0-py3-none-any.whl
+python -m pip install finalert
 ```
 
 Confirm the installation:
